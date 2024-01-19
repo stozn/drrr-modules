@@ -1,4 +1,4 @@
-# Drrr Bot 模块
+# Drrr-Bot 模块
 
 本仓库为 [Drrr-Bot](https://github.com/stozn/drrr-bot) 的模块仓库。
 
