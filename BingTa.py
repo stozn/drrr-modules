@@ -58,6 +58,12 @@ class XSHZ(Card):
         self.desc = "起始玩家"
 
 
+class SWB(Card):
+    def __init__(self):
+        super().__init__(2, "生物部", 4)
+        self.desc = "游戏结束时，毒死被此卡质疑的玩家"
+
+
 class BZ(Card):
     def __init__(self):
         super().__init__(2, "班长", 4)
@@ -231,7 +237,7 @@ class Game:
                 break
             elif not self.players[idx].fixed:
                 self.stage.player = self.players[idx]
-                self.me(f"@{self.stage.player.name} 请开始行动")
+                self.me(f"@{self.stage.player.name} 请开始行动 ※请私信我【/使用 卡牌名】【/调和 卡牌名】【/质疑 玩家名 卡牌名】")
                 break
 
     def has(self, card):
@@ -245,82 +251,83 @@ class Game:
     def use(self, player, card):
         ret = player.use(card)
         if not ret:
-            self.me(f"@{player.name} 无此卡 或 使用【犯人】卡")
+            return True
+        
+        player.used.append(ret)
+        if card in ["外星人", "感染者", "学生会长", "生物部", "图书委员"]:
+            if card in ["外星人", "学生会长", "生物部"]:
+                self.me(f"@{player.name} 使用了一张【{card}】，但无效果")
+            elif card == "感染者":
+                if not len(self.body):
+                    self.me(f"@{player.name} 使用了一张【{card}】，但调和区是空的")
+                else:
+                    rcard = pop(self.body)
+                    player.cards.append(rcard)
+                    self.me(f"@{player.name} 使用了一张【{card}】,抽走了随机一张调和牌")
+                    self.dm(player.id, f"你得到了【{rcard.name}】")
+            elif card == "图书委员":
+                self.dm(player.id, self.bodyCards())
+                self.me(f"@{player.name} 使用了一张【{card}】,查看了调和区")
+            self.next_player()
         else:
-            player.used.append(ret)
-            if card in ["外星人", "感染者", "学生会长", "图书委员"]:
-                if card in ["外星人", "学生会长"]:
-                    self.me(f"@{player.name} 使用了一张【{card}】，但无效果")
-                elif card == "感染者":
-                    if not len(self.body):
-                        self.me(f"@{player.name} 使用了一张【{card}】，但调和区是空的")
-                    else:
-                        rcard = pop(self.body)
-                        player.cards.append(rcard)
-                        self.me(f"@{player.name} 使用了一张【{card}】,抽走了随机一张调和牌")
-                        self.dm(player.id, f"你得到了【{rcard.name}】")
-                elif card == "图书委员":
-                    self.dm(player.id, self.bodyCards())
-                    self.me(f"@{player.name} 使用了一张【{card}】,查看了调和区")
-                self.next_player()
-            else:
-                self.stage.cur = 2
-                self.stage.skill = card
-                if card == "优等生":
-                    self.me(f"@{player.name} 使用了一张【{card}】,请外星人选择是否伪装犯人【/伪装】or【/不伪装】")
-                    if not any(p.has("外星人") for p in self.players):
-                        suspect = ["@" + p.name for p in self.players if p.has("犯人")][0]
-                        self.dm(player.id, "犯人是" + suspect)
-                        self.me(f"@{player.name} 已获得犯人信息")
-                        self.next_player()
-                    else:
-                        to_p = [p.id for p in self.players if p.has("外星人")]
-                        self.dm(to_p, "请选择是否伪装犯人【/伪装】or【/不伪装】")
-                elif card == "风纪委员":
-                    self.me(f"@{player.name} 使用了一张【{card}】,请选择要查看的目标玩家【/查看 玩家名】")
-                elif card == "保健委员":
-                    if not any(len(p.used) > 0 for p in self.players if p.name != player.name):
-                        self.me(f"@{player.name} 使用了一张【{card}】,但是其他人的已用区是空的")
-                        self.next_player()
-                    elif not any(
-                            c.name != "保健委员" for p in self.players if p.name != player.name and len(p.used) > 0 for c in
-                            p.used):
-                        self.me(f"@{player.name} 使用了一张【{card}】,但是不能取走【保健委员】")
-                        self.next_player()
-                    else:
-                        self.me(f"@{player.name} 使用了一张【{card}】,请选择要取走卡牌的目标玩家【/取走 玩家名 卡牌名】")
-                        self.showUsed()
-                elif card == "归宅部":
-                    if not len(self.body):
-                        self.me(f"@{player.name} 使用了一张【{card}】，但调和区是空的")
-                        self.next_player()
-                    else:
-                        self.me(f"@{player.name} 使用了一张【{card}】,请选择要交换调和牌的手牌【/交换 卡牌名】")
-                elif card == "共犯":
-                    if not len(player.suspect):
-                        self.me(f"@{player.name} 使用了一张【{card}】,但是你的质疑区是空的")
-                        self.next_player()
-                    else:
-                        self.me(f"@{player.name} 使用了一张【{card}】,请选择要移动质疑牌的目标玩家【/移动 玩家名】")
-                elif card == "大小姐":
-                    if not any(not p.fixed for p in self.players if p.name != player.name):
-                        self.me(f"@{player.name} 使用了一张【{card}】,但是其他人都已固定身份")
-                        self.next_player()
-                    else:
-                        self.me(f"@{player.name} 使用了一张【{card}】,请选择要抽走卡牌的目标玩家【/抽走 用户名】")
-                elif card == "班长":
-                    if not any(not p.fixed for p in self.players if p.name != player.name):
-                        self.me(f"@{player.name} 使用了一张【{card}】,但是其他人都已固定身份")
-                        self.next_player()
-                    else:
-                        self.me(f"@{player.name} 使用了一张【{card}】,请选择要交换卡牌的目标玩家【/交换 用户名】")
-                elif card == "新闻部":
-                    if not any(not p.fixed for p in self.players if p.name != player.name):
-                        self.me(f"@{player.name} 使用了一张【{card}】,但是其他人都已固定身份")
-                        self.next_player()
-                    else:
-                        self.stage.to_p = []
-                        self.me(f"@{player.name} 使用了一张【{card}】,请全体玩家选择要交换给下家的手牌【/交换 卡牌名】")
+            self.stage.cur = 2
+            self.stage.skill = card
+            if card == "优等生":
+                self.me(f"@{player.name} 使用了一张【{card}】,请外星人私信我【/伪装】or【/不伪装】犯人")
+                if not any(p.has("外星人") for p in self.players):
+                    suspect = ["@" + p.name for p in self.players if p.has("犯人")][0]
+                    self.dm(player.id, "犯人是" + suspect)
+                    self.me(f"@{player.name} 已获得犯人信息")
+                    self.next_player()
+                else:
+                    to_p = [p.id for p in self.players if p.has("外星人")]
+                    self.dm(to_p, "请选择是否伪装犯人【/伪装】or【/不伪装】")
+            elif card == "风纪委员":
+                self.me(f"@{player.name} 使用了一张【{card}】,请选择要查看的目标玩家【/查看 玩家名】")
+            elif card == "保健委员":
+                if not any(len(p.used) > 0 for p in self.players if p.name != player.name):
+                    self.me(f"@{player.name} 使用了一张【{card}】,但是其他人的已用区是空的")
+                    self.next_player()
+                elif not any(
+                        c.name != "保健委员" for p in self.players if p.name != player.name and len(p.used) > 0 for c in
+                        p.used):
+                    self.me(f"@{player.name} 使用了一张【{card}】,但是不能取走【保健委员】")
+                    self.next_player()
+                else:
+                    self.me(f"@{player.name} 使用了一张【{card}】,请选择要取走卡牌的目标玩家【/取走 玩家名 卡牌名】")
+                    self.showUsed()
+            elif card == "归宅部":
+                if not len(self.body):
+                    self.me(f"@{player.name} 使用了一张【{card}】，但调和区是空的")
+                    self.next_player()
+                else:
+                    self.me(f"@{player.name} 使用了一张【{card}】,请选择要交换调和牌的手牌 ※请私信我【/交换 卡牌名】")
+            elif card == "共犯":
+                if not len(player.suspect):
+                    self.me(f"@{player.name} 使用了一张【{card}】,但是你的质疑区是空的")
+                    self.next_player()
+                else:
+                    self.me(f"@{player.name} 使用了一张【{card}】,请选择要移动质疑牌的目标玩家【/移动 玩家名】")
+            elif card == "大小姐":
+                if not any(not p.fixed for p in self.players if p.name != player.name):
+                    self.me(f"@{player.name} 使用了一张【{card}】,但是其他人都已固定身份")
+                    self.next_player()
+                else:
+                    self.me(f"@{player.name} 使用了一张【{card}】,请选择要抽走卡牌的目标玩家【/抽走 用户名】")
+            elif card == "班长":
+                if not any(not p.fixed for p in self.players if p.name != player.name):
+                    self.me(f"@{player.name} 使用了一张【{card}】,但是其他人都已固定身份")
+                    self.next_player()
+                else:
+                    self.me(f"@{player.name} 使用了一张【{card}】,请选择要交换卡牌的目标玩家【/交换 用户名】")
+            elif card == "新闻部":
+                if not any(not p.fixed for p in self.players if p.name != player.name):
+                    self.me(f"@{player.name} 使用了一张【{card}】,但是其他人都已固定身份")
+                    self.next_player()
+                else:
+                    self.stage.to_p = []
+                    self.me(f"@{player.name} 使用了一张【{card}】,请全体玩家选择要交换给下家的手牌 ※请私信我【/交换 卡牌名】")
+        return False
 
     def brew(self, player, card):
         ret = player.use(card)
@@ -393,12 +400,12 @@ class Game:
         n = self.n
         self.target = 12 - n
         self.deck = [WXR()] * 1 + [GRZ()] * 1 + [FR()] * 1 + [GF()] * 0 + [XSHZ()] * 1 \
-                    + [BZ()] * 2 + [YDS()] * 1 + [FJWY()] * 1 + [BJWY()] * 2 + [TSWY()] * 2 \
-                    + [DXJ()] * 2 + [XWB()] * 2 + [GZB()] * 2
+                    + [SWB()] * 1 + [BZ()] * 2 + [YDS()] * 1 + [FJWY()] * 1 + [BJWY()] * 2 \
+                    + [TSWY()] * 2 + [DXJ()] * 1 + [XWB()] * 2 + [GZB()] * 2
         if n>3:
             self.deck.append([GF(), YDS(), FJWY(), DXJ(), XWB(), GZB()])
         if n==5:
-            self.deck.append([TSWY()])
+            self.deck.append([DXJ()])
         random.shuffle(self.deck)
         m = len(self.deck)
         for i, j in zip(range(0, m, m // n), range(0, n)):
@@ -409,9 +416,8 @@ class Game:
     def start(self):
         self.stage.cur = 1
         self.stage.player = [p for p in self.players if p.has("学生会长")][0]
-        self.me("出牌：【/使用 卡牌名】┃调和：【/调和 卡牌名】┃质疑：【/质疑 玩家名 卡牌名】")
         self.me(f"游戏开始，共{len(self.players)}人参加游戏，调和目标是{self.target}点。" + \
-                f"请拥有【学生会长】的@{self.stage.player.name} 开始行动")
+                f"请拥有【学生会长】的@{self.stage.player.name} 开始行动 ※请私信我【/使用 卡牌名】【/调和 卡牌名】【/质疑 玩家名 卡牌名】")
 
     def end(self):
         self.stage.cur = 3
@@ -421,16 +427,24 @@ class Game:
         self.say(self.bodyCards())
 
         result = "结果："
+
         sc = [0] * self.n
         for i in range(self.n):
             for c in self.players[i].suspect:
+                if c.name == "生物部":
+                    sc[i] = -1
+                    break
                 sc[i] += c.mp
-        prison = [i for i, s in enumerate(sc) if s == max(sc)]
+
+        prison = [i for i, s in enumerate(sc) if s == max(sc) and s > 0]
         arr = " ".join("@" + self.players[i].name for i in prison)
         if len(prison) == self.n:
             prison = []
             arr = "无人"
         result += "\n监禁结果：" + arr + " 被监禁"
+
+        if min(sc) == -1:
+            result += f"\n@{self.players[sc.index(-1)].name} 被毒杀"
 
         body = 0
         brew = False
@@ -449,19 +463,25 @@ class Game:
 
         def all(card):
             return ["@" + p.name for p in self.players if p.cards[0].name == card]
+        
+        def alive(card):
+            idx = [i for i, p in enumerate(self.players) if p.cards[0].name == card][0]
+            if sc[idx] == -1:
+                return False
+            return True
 
         if arrest("外星人"):
             winner = all("外星人")[0]
             result += f"【外星人】{winner} 取得胜利"
-        elif self.has("感染者") and not brew:
+        elif self.has("感染者") and not brew and alive("感染者"):
             winner = all("感染者")[0]
             result += f"【感染者】{winner} 取得胜利"
-        elif self.has("犯人") and not arrest("犯人"):
+        elif self.has("犯人") and not arrest("犯人") and alive("犯人"):
             winner = "【犯人】" + all("犯人")[0]
             if self.has("共犯"):
                 winner += "  【共犯】" + all("共犯")[0]
             result += f"{winner} 取得胜利"
-        elif brew and (self.has("学生会长") or self.has("班长") or self.has("优等生") or self.has("风纪委员")
+        elif brew and (self.has("学生会长") or self.has("生物部") or self.has("班长") or self.has("优等生") or self.has("风纪委员")
                        or self.has("保健委员") or self.has("图书委员") or self.has("大小姐") or self.has("新闻部")):
             result += f"【好人集团】取得胜利"
         elif self.has("归宅部"):
@@ -569,7 +589,8 @@ class BingTa(Module):
                         game.brew(player, card)
                     if chk(msg, r"^/使用\s+\S+"):
                         card = msg.split()[1]
-                        game.use(player, card)
+                        if game.use(player, card):
+                            dm(player.id, f"你没有【{card}】或使用了【犯人】卡（犯人卡不可直接打出）")
                     elif chk(msg, r"^/质疑\s+\S+\s+\S+"):
                         msg_split = msg.split()
                         to_p = ckn(msg_split[1])
