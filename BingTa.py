@@ -368,8 +368,11 @@ class Game:
             self.me(f"@{name} 未加入游戏")
 
     def showPlayers(self):
-        self.say("玩家:\n" + "\n".join(f"{i + 1}.@{p.name}【{len(p.cards)}】 {'已固定身份' if p.fixed else '未固定身份'}" \
+        if self.stage.cur > 0:
+            self.say("玩家:\n" + "\n".join(f"{i + 1}.@{p.name}【{len(p.cards)}】 {'已固定身份' if p.fixed else '未固定身份'}" \
                                      for i, p in enumerate(self.players)))
+        else:
+            self.say("玩家:\n" + "\n".join(f"{i + 1}.@{p.name}" for i, p in enumerate(self.players)))
 
     def showRoles(self):
         self.say("玩家身份:\n" + "\n".join(f"{i + 1}.@{p.name} 【{p.cards[0].name}】" \
