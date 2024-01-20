@@ -432,7 +432,7 @@ class Game:
         for i in range(self.n):
             for c in self.players[i].suspect:
                 if c.name == "生物部":
-                    sc[i] = -1
+                    sc[i] = -2
                     break
                 sc[i] += c.mp
 
@@ -443,8 +443,8 @@ class Game:
             arr = "无人"
         result += "\n监禁结果：" + arr + " 被监禁"
 
-        if min(sc) == -1:
-            result += f"\n@{self.players[sc.index(-1)].name} 被毒杀"
+        if min(sc) == -2:
+            result += f"\n@{self.players[sc.index(2)].name} 被毒杀"
 
         body = 0
         brew = False
@@ -466,7 +466,7 @@ class Game:
         
         def alive(card):
             idx = [i for i, p in enumerate(self.players) if p.cards[0].name == card][0]
-            if sc[idx] == -1:
+            if sc[idx] == -2:
                 return False
             return True
 
