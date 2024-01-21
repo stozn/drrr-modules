@@ -447,7 +447,7 @@ class Game:
         result += "\n监禁结果：" + arr + " 被监禁"
 
         if min(sc) == -2:
-            result += f"\n@{self.players[sc.index(2)].name} 被毒杀"
+            result += f"\n@{self.players[sc.index(-2)].name} 被毒杀"
 
         body = 0
         brew = False
