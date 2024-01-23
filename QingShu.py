@@ -80,7 +80,7 @@ class Player:
         return f"@{self.name} 的手牌：\n" + "\n".join(f"⭐{c.mp}【{c}】" + 
                                         f"{c.desc}" for  c in self.cards)
     def showUsed(self):
-        return f"@{self.name} 弃牌：" + "".join(f"【{c}】" for c in self.used)
+        return f"@{self.name} ：" + "".join(f"【{c}】" for c in self.used)
         
     def use(self, card):
         if not self.has(card) or card in ["王子", "国王"] and self.has("女伯爵"):
@@ -176,6 +176,8 @@ class Game:
         self.stage = 3
         self.showPlayers()
         self.showResult()
+
+    def restart(self):
         self.send("新一轮开始！")
         for p in self.players:
             p.cards = []
@@ -189,28 +191,29 @@ class Game:
             self.send("玩家:\n" + "\n".join(f"{i + 1}.@{p}" for i, p in enumerate(self.players)))
         elif self.stage < 3:
             self.send("玩家:\n" + "\n".join(f"{i + 1}.@{p} " + 
-                    f"{'侍女守护中' if p.protected and p.alive else '' if p.alive else f'⭐{p.cards[0].mp}【{p.cards[0]}】已出局'}"
+                    f"{'侍女守护中' if p.protected and p.alive else '' if p.alive else f'已出局'}"
                                      for i, p in enumerate(self.players)))
         else:
-            self.send("玩家身份:\n" + "\n".join(f"{i + 1}.@{p} ⭐{p.cards[0].mp}【{p.cards[0]}】" + 
-                                f"{'' if p.alive else '已出局'}"  for i, p in enumerate(self.players)))
+            self.send("玩家身份:\n" + "\n".join(f"{i + 1}.@{p} " + 
+                    f'{"已出局" if not p.alive else f"⭐{p.cards[0].mp}【{p.cards[0]}】"}' for i, p in enumerate(self.players)))
+                    
     def showUsed(self):
         self.send("弃牌区:\n" + "\n".join(f"{i + 1}.{p.showUsed()}" for i, p in enumerate(self.players)))
 
     def showResult(self):
         alive = [p for p in self.players if p.alive]
         if len(alive) == 1:
-            self.send(f"游戏结束！\n唯一未出局的@{alive[0]} 成功传递情书！")
+            self.send(f"游戏结束！\n唯一未出局的 @{alive[0]} \n成功传递情书！【/继续】进行下一轮")
         else:
-            self.send(f"游戏结束！\nMP最高的@{max(alive, key=lambda p: p.cards[0].mp)} 成功传递情书！")
+            self.send(f"游戏结束！\nMP最高的 @{max(alive, key=lambda p: p.cards[0].mp)} 成功传递情书！\n【/继续】进行下一轮")
         
     def showState(self):
         if self.stage == 0:
             self.me("报名阶段")
         elif self.stage == 1:
-            self.me(f"{self.cur} 行动中，牌堆剩余{len(self.deck)}张牌")
+            self.me(f"@{self.cur} 行动中，牌堆剩余{len(self.deck)}张牌")
         elif self.stage == 2:
-            self.me(f"{self.cur} 发动【{self.curCard}】技能中，【/取消】取消技能（防卡死），牌堆剩余{len(self.deck)}张牌")
+            self.me(f"@{self.cur} 发动【{self.curCard}】技能中，【/取消】取消技能（防卡死），牌堆剩余{len(self.deck)}张牌")
         elif self.stage == 3:
             self.showResult()
 
@@ -254,12 +257,16 @@ class QingShu(Module):
     def __init__(self, bot):
         super().__init__(bot)
         self.game = Game(bot)
+        self.game.me("【情书】游戏开始, [+1] 加入, [-1] 退出, [/p] 玩家," + \
+                "[/go] 开始, [/游戏] 重新报名, [/指令] 指令列表")
 
     @property
     def cmds(self):
         cmd_dict = {
                     'help': r'^\/指令',
                     'reset': r'^\/游戏',
+                    'restart': r'^\/继续',
+                    'cardSet': r'^\/卡组',
                     'state': r'^\/s',
                     'join': r'^\+1',
                     'quit': r'^\-1',
@@ -279,27 +286,45 @@ class QingShu(Module):
     
     def help(self, msg):
         cmds='''指令列表：
-/游戏 回到报名阶段┃/go 开始游戏
+/游戏 重新开始游戏/go 开始游戏
 /s 查看状态┃/p 查看玩家
 +1 加入游戏┃-1 退出游戏
-/手牌 查看手牌┃/指令 查看指令
+/手牌 查看手牌┃/卡组 查看卡组
 /弃牌区 查看所有玩家的弃牌牌
 '''
         self.bot.send(cmds)
+    
+    def cardSet(self, msg):
+        cards='''全卡组：
+守卫：5
+祭司：3
+男爵：2
+侍女：2
+王子：2
+国王：1
+女伯爵：1
+公主：1
+'''
+        self.bot.send(cards)
     
     def reset(self, msg):
         self.game.reset()
         self.game.me("【情书】游戏开始, [+1] 加入, [-1] 退出, [/p] 玩家," + \
                 "[/go] 开始, [/游戏] 重新报名, [/指令] 指令列表")
     
+    def restart(self, msg):
+        self.game.restart()
+    
     def state(self, msg):
         self.game.showState()
     
     def join(self, msg):
-        self.game.join(msg.user.name, msg.user.id)
+        if self.game.stage == 0:
+            self.game.join(msg.user.name, msg.user.id)
     
     def quit(self, msg):
-        self.game.quit(msg.user.name)
+        if self.game.stage == 0:
+            self.game.quit(msg.user.name)
     
     def showPlayers(self, msg):
         self.game.showPlayers()
@@ -443,7 +468,7 @@ class QingShu(Module):
         elif c1.mp < c2.mp:
             self.game.send(f"@{user} 与 @{p} 拼点，@{user} 出局, 手牌为⭐{c1.mp}【{c1}】")
             self.game.cur.alive = False
-            self.game.cur.used.append(p.lose(p.cards[0].name))
+            self.game.cur.used.append(self.game.cur.lose(self.game.cur.cards[0].name))
             self.game.next()
         else:
             self.game.me(f"@{user} 与 @{p} 拼点，平局")
@@ -463,6 +488,7 @@ class QingShu(Module):
         if p.cards[0].name == "公主":
             self.game.send(f"@{user} 使 @{p} 弃掉⭐{p.cards[0].mp}【{p.cards[0]}】，@{p} 出局")
             p.alive = False
+            p.used.append(p.lose(p.cards[0].name))
             self.game.next()
             return
         
