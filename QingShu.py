@@ -80,7 +80,7 @@ class Player:
         return f"@{self.name} 的手牌：\n" + "\n".join(f"⭐{c.mp}【{c}】" + 
                                         f"{c.desc}" for  c in self.cards)
     def showUsed(self):
-        return f"@{self.name} 已用：" + "".join(f"【{c}】" for c in self.used)
+        return f"@{self.name} 弃牌：" + "".join(f"【{c}】" for c in self.used)
         
     def use(self, card):
         if not self.has(card) or card in ["王子", "国王"] and self.has("女伯爵"):
@@ -195,7 +195,7 @@ class Game:
             self.send("玩家身份:\n" + "\n".join(f"{i + 1}.@{p} ⭐{p.cards[0].mp}【{p.cards[0]}】" + 
                                 f"{'' if p.alive else '已出局'}"  for i, p in enumerate(self.players)))
     def showUsed(self):
-        self.send("已用区:\n" + "\n".join(f"{i + 1}.@{p.showUsed()}" for i, p in enumerate(self.players)))
+        self.send("弃牌区:\n" + "\n".join(f"{i + 1}.{p.showUsed()}" for i, p in enumerate(self.players)))
 
     def showResult(self):
         alive = [p for p in self.players if p.alive]
@@ -266,7 +266,7 @@ class QingShu(Module):
                     'showPlayers': r'^\/p',
                     'start': r'^\/go',
                     'showCards': r'^\/手牌',
-                    'showUsed': r'^\/已用区',
+                    'showUsed': r'^\/弃牌区',
                     'use': r'^\/使用\s+\S+',
                     'cancel': r'^\/取消',
                     'guess': r'^\/猜测\s+\S+\s+\S+',
@@ -283,7 +283,7 @@ class QingShu(Module):
 /s 查看状态┃/p 查看玩家
 +1 加入游戏┃-1 退出游戏
 /手牌 查看手牌┃/指令 查看指令
-/已用区 查看所有玩家的已用牌
+/弃牌区 查看所有玩家的弃牌牌
 '''
         self.bot.send(cmds)
     
@@ -396,6 +396,7 @@ class QingShu(Module):
         if p.has(card):
             self.game.send(f"@{user} 猜测 @{p} 的手牌为【{card}】正确，@{p} 出局")
             p.alive = False
+            p.used.append(p.lose(p.cards[0].name))
             self.game.next()
         else:
             if any(c.name == card for c in self.game.cards):
@@ -437,10 +438,12 @@ class QingShu(Module):
         if c1.mp > c2.mp:
             self.game.send(f"@{user} 与 @{p} 拼点，@{p} 出局, 手牌为⭐{c2.mp}【{c2}】")
             p.alive = False
+            p.used.append(p.lose(p.cards[0].name))
             self.game.next()
         elif c1.mp < c2.mp:
             self.game.send(f"@{user} 与 @{p} 拼点，@{user} 出局, 手牌为⭐{c1.mp}【{c1}】")
             self.game.cur.alive = False
+            self.game.cur.used.append(p.lose(p.cards[0].name))
             self.game.next()
         else:
             self.game.me(f"@{user} 与 @{p} 拼点，平局")
