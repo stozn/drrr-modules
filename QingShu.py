@@ -57,6 +57,7 @@ class Player:
         self.used = []
         self.alive = True
         self.protected = False
+        self.score = 0
 
     def __str__(self):
         return self.name
@@ -176,6 +177,7 @@ class Game:
         self.stage = 3
         self.showPlayers()
         self.showResult()
+        self.showScore()
 
     def restart(self):
         self.send("新一轮开始！")
@@ -196,6 +198,10 @@ class Game:
         else:
             self.send("玩家身份:\n" + "\n".join(f"{i + 1}.@{p} " + 
                     f'{"已出局" if not p.alive else f"⭐{p.cards[0].mp}【{p.cards[0]}】"}' for i, p in enumerate(self.players)))
+    
+    def showScore(self):
+        rank = sorted(self.players, key=lambda p: p.score, reverse=True)
+        self.send("积分榜\n" + "\n".join(f"{i + 1}.@{p} {p.score} 积分" for i, p in enumerate(rank)))
                     
     def showUsed(self):
         self.send("弃牌区:\n" + "\n".join(f"{i + 1}.{p.showUsed()}" for i, p in enumerate(self.players)))
@@ -203,9 +209,12 @@ class Game:
     def showResult(self):
         alive = [p for p in self.players if p.alive]
         if len(alive) == 1:
+            alive[0].score += 1
             self.send(f"游戏结束！\n唯一未出局的 @{alive[0]} \n成功传递情书！【/继续】进行下一轮")
         else:
-            self.send(f"游戏结束！\nMP最高的 @{max(alive, key=lambda p: p.cards[0].mp)} 成功传递情书！\n【/继续】进行下一轮")
+            winner = max(alive, key=lambda p: p.cards[0].mp)
+            winner.score += 1
+            self.send(f"游戏结束！\nMP最高的 @{winner} 成功传递情书！\n【/继续】进行下一轮")
         
     def showState(self):
         if self.stage == 0:
@@ -273,6 +282,7 @@ class QingShu(Module):
                     'showPlayers': r'^\/p',
                     'start': r'^\/go',
                     'showCards': r'^\/手牌',
+                    'showScore': r'^\/积分',
                     'showUsed': r'^\/弃牌区',
                     'use': r'^\/使用\s+\S+',
                     'cancel': r'^\/取消',
@@ -286,10 +296,11 @@ class QingShu(Module):
     
     def help(self, msg):
         cmds='''指令列表：
-/游戏 重新开始游戏/go 开始游戏
+/游戏 回到报名阶段┃/go 开始游戏
 /s 查看状态┃/p 查看玩家
 +1 加入游戏┃-1 退出游戏
 /手牌 查看手牌┃/卡组 查看卡组
+/积分 查看积分榜┃/取消 取消技能
 /弃牌区 查看所有玩家的弃牌牌
 '''
         self.bot.send(cmds)
@@ -330,6 +341,14 @@ class QingShu(Module):
         self.game.showPlayers()
     
     def start(self, msg):
+        if 0 < self.game.stage < 3:
+            self.game.me("游戏已经开始")
+            return
+        
+        if self.game.stage == 3:
+            self.game.me("游戏已结束！ /游戏 重新报名 | /继续 开始下一轮")
+            return
+        
         if 1< len(self.game.players) < 6:
             self.game.start()
         else:
@@ -343,6 +362,12 @@ class QingShu(Module):
                 self.game.dm(msg.user.id, player[0].showCards())
             else:
                 self.game.me(f"@{msg.user.name} 你没有加入游戏")
+        else:
+            self.game.me("游戏未开始")
+    
+    def showScore(self, msg):
+        if self.game.stage > 0:
+            self.game.showScore()
         else:
             self.game.me("游戏未开始")
         
@@ -519,10 +544,3 @@ class QingShu(Module):
         self.game.dm(p.id, p.showCards())
         self.game.dm(self.game.cur.id, self.game.cur.showCards())
         self.game.next()
-
-
-                    
-                
-
-    
-
