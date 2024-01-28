@@ -17,37 +17,21 @@ class Card:
     def __str__(self):
         return self.name
 
-class SW(Card):
-    def __init__(self):
-        super().__init__(1, '守卫', '猜测某人的手牌，猜对则对方出局')
+SW = Card(1, '守卫', '猜测某人的手牌，猜对则对方出局')
 
-class JS(Card):
-    def __init__(self):
-        super().__init__(2, '祭司', '查看某人的手牌')
+JS= Card(2, '祭司', '查看某人的手牌')
 
-class NJ(Card):
-    def __init__(self):
-        super().__init__(3, '男爵', '与某人拼点，MP小的出局')
+NJ= Card(3, '男爵', '与某人拼点，MP小的出局')
 
-class SN(Card):
-    def __init__(self):
-        super().__init__(4, '侍女', '免疫所有技能，直到再次轮到自己')
+SN= Card(4, '侍女', '免疫所有技能，直到再次轮到自己')
 
-class WZ(Card):
-    def __init__(self):
-        super().__init__(5, '王子', '使某人弃牌并重新抽取')
+WZ= Card(5, '王子', '使某人弃牌并重新抽取')
 
-class GW(Card):
-    def __init__(self):
-        super().__init__(7, '国王', '与某人交换手牌')
+GW= Card(7, '国王', '与某人交换手牌')
 
-class NBJ(Card):
-    def __init__(self):
-        super().__init__(8, '女伯爵', '持有国王或王子，则必须打出此卡')
+NBJ= Card(8, '女伯爵', '持有国王或王子，则必须打出此卡')
 
-class GZ(Card):
-    def __init__(self):
-        super().__init__(9, '公主', '打出或丢弃此卡，玩家被淘汰')
+GZ= Card(9, '公主', '打出或丢弃此卡，玩家被淘汰')
 
 class Player:
     def __init__(self, name, id):
@@ -133,8 +117,8 @@ class Game:
     
     def start(self):
         self.me("开始发牌...")
-        self.cards = [SW()] * 5 + [JS()] * 3 + [NJ()] * 2 + [SN()] * 2 + \
-                        [WZ()] * 2 + [GW()] * 1 + [NBJ()] * 1 + [GZ()] * 1
+        self.cards = [SW] * 5 + [JS] * 3 + [NJ] * 2 + [SN] * 2 + \
+                        [WZ] * 2 + [GW] * 1 + [NBJ] * 1 + [GZ] * 1
         
         random.shuffle(self.cards)
         num = 1
@@ -210,7 +194,7 @@ class Game:
         alive = [p for p in self.players if p.alive]
         if len(alive) == 1:
             alive[0].score += 1
-            self.send(f"游戏结束！\n唯一未出局的 @{alive[0]} \n成功传递情书！【/继续】进行下一轮")
+            self.send(f"游戏结束！\n唯一未出局的 @{alive[0]} \n成功传递情书！\n【/继续】进行下一轮")
         else:
             winner = max(alive, key=lambda p: p.cards[0].mp)
             winner.score += 1
