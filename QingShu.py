@@ -308,7 +308,8 @@ class QingShu(Module):
                 "[/go] 开始, [/游戏] 重新报名, [/指令] 指令列表")
     
     def restart(self, msg):
-        self.game.restart()
+        if self.game.stage == 3 and msg.user.name in [p.name for p in self.game.players]:
+            self.game.restart()
     
     def state(self, msg):
         self.game.showState()
