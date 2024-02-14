@@ -315,11 +315,11 @@ class QingShu(Module):
         self.game.showState()
     
     def join(self, msg):
-        if self.game.stage == 0:
+        if self.game.stage in [0, 3]:
             self.game.join(msg.user.name, msg.user.id)
     
     def quit(self, msg):
-        if self.game.stage == 0:
+        if self.game.stage in [0, 3]:
             self.game.quit(msg.user.name)
     
     def showPlayers(self, msg):
