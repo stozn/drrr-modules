@@ -1,6 +1,6 @@
 # [情书模块（QingShu）](QingShu.py)
 
-桌游《情书》的模块，可以在drrr聊天室内进行游戏。[**图文版说明**](https://docs.qq.com/sheet/DVkVCWFFueUVFcXNB?tab=trd5sg)
+桌游《情书》的模块，可以在drrr聊天室内进行游戏。[**图文版说明**](https://docs.qq.com/aio/DUmdZeHFteElNa3Z0?p=rb8casIesBC7knMFKJpAwi)
 
 
 ## 游戏简介
@@ -42,6 +42,7 @@
 | ------------- | ------------------------------- |
 | **全局**      | **以下命令可用：**              |
 | /指令         | 查看指令列表                    |
+| /说明         | 查看图文版游戏说明              |
 | /游戏         | 回到报名阶段重新开始游戏        |
 | /p            | 查看所有玩家                    |
 | /s            | 查看当前状态                    |
