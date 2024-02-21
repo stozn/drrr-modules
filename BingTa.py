@@ -215,8 +215,8 @@ class Game:
         self.result = None
         self.stage.reset()
         self.me("【冰冷的她醒来之前】游戏开始, [+1] 加入, [-1] 退出, [/p] 玩家," + \
-                "[/go] 开始, [/游戏] 重新报名, [/指令] 指令列表")
-        self.bot.send_url('图文版帮助说明：', 'https://docs.qq.com/aio/DUmdZeHFteElNa3Z0?p=O4fcyF2HI8XWoTcVd4F60c')
+                "[/go] 开始, [/游戏] 重新报名, [/指令] 指令列表, [/说明] 图文版游戏说明")
+        self.bot.send_url('图文版游戏说明：', 'https://docs.qq.com/aio/DUmdZeHFteElNa3Z0?p=O4fcyF2HI8XWoTcVd4F60c')
 
     def next_player(self):
         cur_player = self.stage.player
@@ -549,6 +549,7 @@ class BingTa(Module):
 /质疑 查看所有玩家质疑牌数量
 /已用区 查看所有玩家的已用牌
 /取消 放弃使用卡牌技能（防卡死）
+/说明 查看图文版游戏说明
 '''
                 say(cmd)
 
@@ -567,6 +568,8 @@ class BingTa(Module):
                     me(f"@{stage.player.name} 发动【{stage.skill}】的技能中")
                 elif stage.cur == 3:
                     say(game.result)
+            elif chk(msg, r"^/说明"):
+                self.bot.send_url('图文版游戏说明：', 'https://docs.qq.com/aio/DUmdZeHFteElNa3Z0?p=O4fcyF2HI8XWoTcVd4F60c')
 
             # stage 0 预备阶段
             if stage.cur == 0:

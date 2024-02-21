@@ -251,13 +251,14 @@ class QingShu(Module):
         super().__init__(bot)
         self.game = Game(bot)
         self.game.me("【情书】游戏开始, [+1] 加入, [-1] 退出, [/p] 玩家," + \
-                "[/go] 开始, [/游戏] 重新报名, [/指令] 指令列表")
-        self.bot.send_url('图文版帮助说明：', 'https://docs.qq.com/aio/DUmdZeHFteElNa3Z0?p=rb8casIesBC7knMFKJpAwi')
+                "[/go] 开始, [/游戏] 重新报名, [/指令] 指令列表, [/说明] 图文版游戏说明")
+        self.bot.send_url('图文版游戏说明：', 'https://docs.qq.com/aio/DUmdZeHFteElNa3Z0?p=rb8casIesBC7knMFKJpAwi')
 
     @property
     def cmds(self):
         cmd_dict = {
                     'help': r'^\/指令',
+                    'doc': r'^\/说明',
                     'reset': r'^\/游戏',
                     'restart': r'^\/继续',
                     'cardSet': r'^\/卡组',
@@ -296,8 +297,12 @@ class QingShu(Module):
 /手牌 查看手牌┃/卡组 查看卡组
 /积分 查看积分榜┃/取消 取消技能
 /弃牌区 查看所有玩家的弃牌牌
+/说明 查看图文版游戏说明
 '''
         self.bot.send(cmds)
+    
+    def doc(self, msg):
+        self.bot.send_url('图文版游戏说明：', 'https://docs.qq.com/aio/DUmdZeHFteElNa3Z0?p=rb8casIesBC7knMFKJpAwi')
     
     def cardSet(self, msg):
         cards='''全卡组：
@@ -318,8 +323,14 @@ class QingShu(Module):
                 "[/go] 开始, [/游戏] 重新报名, [/指令] 指令列表")
     
     def restart(self, msg):
-        if self.game.stage == 3 and msg.user.name in [p.name for p in self.game.players]:
-            self.game.restart()
+        if self.game.stage == 3:
+            if msg.user.name in [p.name for p in self.game.players]:
+                if 1< len(self.game.players) < 6:
+                    self.game.restart()
+                else:
+                    self.game.me(f"本游戏支持2-5人游戏，当前玩家数为{len(self.game.players)}")
+            else:
+                self.game.me(f'@{msg.user.name} 您不是玩家')
     
     def state(self, msg):
         self.game.showState()
