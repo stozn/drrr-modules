@@ -196,6 +196,7 @@ class Game:
         self.target = None
         self.body = []
         self.result = None
+        self.reset()
 
     def say(self, cont):
         self.bot.send(cont)
