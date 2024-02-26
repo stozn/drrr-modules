@@ -216,7 +216,6 @@ class Game:
         self.stage.reset()
         self.me("【冰冷的她醒来之前】游戏开始, [+1] 加入, [-1] 退出, [/p] 玩家," + \
                 "[/go] 开始, [/游戏] 重新报名, [/指令] 指令列表, [/说明] 图文版游戏说明")
-        self.bot.send_url('图文版游戏说明：', 'https://docs.qq.com/aio/DUmdZeHFteElNa3Z0?p=O4fcyF2HI8XWoTcVd4F60c')
 
     def next_player(self):
         cur_player = self.stage.player
@@ -506,7 +505,8 @@ class BingTa(Module):
             self.game.me("【冰她】游戏已关闭")
         else:
             self.on = True
-            self.game.reset() 
+            self.game.reset()
+            self.bot.send_url('图文版游戏说明：', 'https://docs.qq.com/aio/DUmdZeHFteElNa3Z0?p=O4fcyF2HI8XWoTcVd4F60c')
 
     @property
     def cmds(self):
@@ -778,4 +778,4 @@ class BingTa(Module):
     def __init__(self, bot):
         super().__init__(bot)
         self.game = Game(Stage(), bot)
-    
+        self.bot.send_url('图文版游戏说明：', 'https://docs.qq.com/aio/DUmdZeHFteElNa3Z0?p=O4fcyF2HI8XWoTcVd4F60c')

@@ -252,8 +252,8 @@ class QingShu(Module):
         self.game = Game(bot)
         self.game.me("【情书】游戏开始, [+1] 加入, [-1] 退出, [/p] 玩家," + \
                 "[/go] 开始, [/游戏] 重新报名, [/指令] 指令列表, [/说明] 图文版游戏说明")
-        self.bot.send_url('图文版游戏说明：', 'https://docs.qq.com/aio/DUmdZeHFteElNa3Z0?p=rb8casIesBC7knMFKJpAwi')
-
+        self.doc('')
+        
     @property
     def cmds(self):
         cmd_dict = {
@@ -287,7 +287,8 @@ class QingShu(Module):
             self.game.me("【情书】游戏已关闭")
         else:
             self.on = True
-            self.reset(msg)       
+            self.reset(msg)
+            self.doc('')
                
     def help(self, msg):
         cmds='''指令列表：
@@ -320,7 +321,7 @@ class QingShu(Module):
     def reset(self, msg):
         self.game.reset()
         self.game.me("【情书】游戏开始, [+1] 加入, [-1] 退出, [/p] 玩家," + \
-                "[/go] 开始, [/游戏] 重新报名, [/指令] 指令列表")
+                "[/go] 开始, [/游戏] 重新报名, [/指令] 指令列表, [/说明] 图文版游戏说明")
     
     def restart(self, msg):
         if self.game.stage == 3:
