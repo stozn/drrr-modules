@@ -474,7 +474,7 @@ class Pokemon(Module):
             self.me("【宝可梦】游戏已关闭")
         else:
             self.on = True
-            self.reset(msg)
+            self.game.reset(msg)
             self.doc()
 
     def help(self, msg=None):
