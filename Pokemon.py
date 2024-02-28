@@ -165,7 +165,7 @@ class Battle:
                 atk = int(atk * ratio + 0.6)
 
                 if skill['概率'] and random.random() < float(skill['概率']):
-                    res.replace('※', '🔯') 
+                    res = res.replace('※', '🔯') 
                     status = skill['状态']
                     if status:
                         if status == '加速':
@@ -474,7 +474,7 @@ class Pokemon(Module):
             self.me("【宝可梦】游戏已关闭")
         else:
             self.on = True
-            self.game.reset(msg)
+            self.game.stage = 0
             self.doc()
 
     def help(self, msg=None):
